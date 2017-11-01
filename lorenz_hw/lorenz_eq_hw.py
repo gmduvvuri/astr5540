@@ -5,43 +5,50 @@ import seaborn as sns
 sns.set_style('darkgrid')
 sns.set_context('talk')
 
+
 def lorenz_func(input, output, func_params):
     sigma, r, b = func_params
-    x_slope = -sigma*(output[0] - output[1])
-    y_slope = r*output[0] - output[1] - output[0]*output[2]
-    z_slope = output[0]*output[1] - b*output[2]
+    x_slope = -sigma * (output[0] - output[1])
+    y_slope = r * output[0] - output[1] - output[0] * output[2]
+    z_slope = output[0] * output[1] - b * output[2]
     return np.array([x_slope, y_slope, z_slope])
 
+
 def rk4_step(func, in_old, out_old, step, func_params):
-    step2 = step/2.0
-    step6 = step/6.0
+    step2 = step / 2.0
+    step6 = step / 6.0
 
     k1 = func(in_old, out_old, func_params)
-    k2 = func(in_old + step2, out_old + step2*k1, func_params)
-    k3 = func(in_old + step2, out_old + step2*k2, func_params)
-    k4 = func(in_old + step, out_old + step*k3, func_params)
+    k2 = func(in_old + step2, out_old + step2 * k1, func_params)
+    k3 = func(in_old + step2, out_old + step2 * k2, func_params)
+    k4 = func(in_old + step, out_old + step * k3, func_params)
 
-    return out_old + step6*(k1 + 2.0*k2 + 2.0*k3 + k4)
+    return out_old + step6 * (k1 + 2.0 * k2 + 2.0 * k3 + k4)
 
 
 def get_txyz_lorenz(lorenz_params=[3.0, 17.0, 1.0],
-                   init_conditions=[0.0, 1.0, 0.0],
-                   step_size=1e-4, start_time=0.0, end_time=50.0):
-    #lorenz_params = [sigma, r, b]
+                    init_conditions=[0.0, 1.0, 0.0],
+                    step_size=1e-4, start_time=0.0, end_time=50.0):
+    # lorenz_params = [sigma, r, b]
 
     t_array = np.arange(start_time, end_time + step_size, step_size)
     out_array = np.empty((3, len(t_array)))
-    out_array[:,0] = init_conditions_1
+    out_array[:, 0] = init_conditions_1
 
     for i in range(1, len(t_array)):
-        print(t_array[i-1], out_array[:, i-1])
-        out_array[:, i] = rk4_step(lorenz_func, t_array[i-1], out_array[:, i-1], step_size, lorenz_params_1)
+        print(t_array[i - 1], out_array[:, i - 1])
+        out_array[:, i] = rk4_step(
+            lorenz_func, t_array[i - 1],
+            out_array[:, i - 1],
+            step_size,
+            lorenz_params_1)
 
     x_array = out_array[0, :]
     y_array = out_array[1, :]
     z_array = out_array[2, :]
 
     return t_array, x_array, y_array, z_array
+
 
 def plot_phase_space(t, x, y, z, save_name='SHOW'):
     ax1, ax2 = plt.subplots((1, 2), sharey=True)
@@ -62,6 +69,7 @@ def plot_phase_space(t, x, y, z, save_name='SHOW'):
     else:
         plt.savefig(save_name)
     plt.clf()
+
 
 def plot_power_period(t, periodic_array, periodic_label=r'$x$',
                       upper_limit=None, save_name='SHOW'):
@@ -91,6 +99,7 @@ def plot_power_period(t, periodic_array, periodic_label=r'$x$',
     else:
         plt.savefig(save_name)
     plt.clf()
+
 
 def plot_poincare_x(t, x, y, z, save_name='SHOW'):
     zero_crossings = np.where(np.diff(np.signbit(x)))
