@@ -5,22 +5,26 @@ import seaborn as sns
 sns.set_style('darkgrid')
 sns.set_context('talk')
 
+
 def test_func(x, y):
-    return np.exp(-x*y)
+    return np.exp(-x * y)
+
 
 def euler_step(func, x_old, y_old, step):
-    return y_old + step*func(x_old, y_old)
+    return y_old + step * func(x_old, y_old)
+
 
 def rk4_step(func, x_old, y_old, step):
-    step2 = step/2.0
-    step6 = step/6.0
+    step2 = step / 2.0
+    step6 = step / 6.0
 
     k1 = func(x_old, y_old)
-    k2 = func(x_old + step2, y_old + step2*k1)
-    k3 = func(x_old + step2, y_old + step2*k2)
-    k4 = func(x_old + step, y_old + step*k3)
+    k2 = func(x_old + step2, y_old + step2 * k1)
+    k3 = func(x_old + step2, y_old + step2 * k2)
+    k4 = func(x_old + step, y_old + step * k3)
 
-    return y_old + step6*(k1 + 2.0*k2 + 2.0*k3 + k4)
+    return y_old + step6 * (k1 + 2.0 * k2 + 2.0 * k3 + k4)
+
 
 def rational_extrapolate(y_arr, step):
     ny = len(y_arr)
@@ -29,13 +33,15 @@ def rational_extrapolate(y_arr, step):
     y_old = np.zeros_like(y_arr)
 
     for m in range(1, ny):
-        for s in range(0, ny-m):
-            factor = 1.0 - (y_arr[s+1] - y_arr[s])/(y_arr[s+1] - y_old[s+1])
-            factor = factor*(step[s]/step[s+m])**2.0 - 1.0
-            ans[s] = y_arr[s+1] + (y_arr[s+1] - y_arr[s])/factor
+        for s in range(0, ny - m):
+            factor = 1.0 - (y_arr[s + 1] - y_arr[s]) / \
+                (y_arr[s + 1] - y_old[s + 1])
+            factor = factor * (step[s] / step[s + m])**2.0 - 1.0
+            ans[s] = y_arr[s + 1] + (y_arr[s + 1] - y_arr[s]) / factor
         y_old = y_arr
         y_arr = ans
     return ans[0]
+
 
 def bs_step(func, x_old, y_old, step, extrapolate_r=[]):
     if len(extrapolate_r) == 0:
@@ -44,29 +50,30 @@ def bs_step(func, x_old, y_old, step, extrapolate_r=[]):
     k = np.empty_like(yex)
 
     for j in range(0, extrapolate_r):
-        nsub = 2.0*float(j+1.0)
-        k[j] = step/nsub
+        nsub = 2.0 * float(j + 1.0)
+        k[j] = step / nsub
 
         yn = y_old
         xn = x_old
-        ynn = y_old + k[j]*func(x_old, y_old)
+        ynn = y_old + k[j] * func(x_old, y_old)
         xnn = x_old + k[j]
 
         for i in range(1, int(nsub), 2):
-            yn = yn + 2.0*k[j]*func(xnn, ynn)
-            xn = xn + 2.0*k[j]
-            ynn = ynn + 2.0*k[j]*func(xn, yn)
-            xnn = xn + 2.0*k[j]
+            yn = yn + 2.0 * k[j] * func(xnn, ynn)
+            xn = xn + 2.0 * k[j]
+            ynn = ynn + 2.0 * k[j] * func(xn, yn)
+            xnn = xn + 2.0 * k[j]
 
-        ynn = ynn - k[j]*func(xn, yn)
-        yex[j] = (yn + ynn)/2.0
+        ynn = ynn - k[j] * func(xn, yn)
+        yex[j] = (yn + ynn) / 2.0
     return rational_extrapolate(yex, k)
+
 
 def drive(func, nsteps, extrapolate_r=[], nobs=[]):
     if len(nobs) == 0:
         nobs = 0
 
-    dx = 1.0/float(nsteps)
+    dx = 1.0 / float(nsteps)
     x_old = 0.0
     y_old_euler = 0.0
     y_old_rk4 = 0.0
@@ -84,16 +91,16 @@ def drive(func, nsteps, extrapolate_r=[], nobs=[]):
         x_array[i] = x_old
 
         y_new_euler = euler_step(func, x_old, y_old_euler, dx)
-        #y_new_rk4 = rk4_step(func, x_old, y_old_rk4, dx)
+        # y_new_rk4 = rk4_step(func, x_old, y_old_rk4, dx)
         if nobs == 0:
             pass
-            #y_new_bs = bs_step(func, x_old, y_old_bs, dx)
+            # y_new_bs = bs_step(func, x_old, y_old_bs, dx)
         else:
             y_new_bs = 0.0
         x_old = x_old + dx
         y_old_euler = y_new_euler
-        #y_old_rk4 = y_new_rk4
-        #y_old_bs = y_new_bs
+        # y_old_rk4 = y_new_rk4
+        # y_old_bs = y_new_bs
 
     y_euler_array[-1] = y_old_euler
     y_rk4_array[-1] = y_old_rk4
@@ -127,7 +134,8 @@ if __name__ == '__main__':
         bs_diff = np.abs(true_y - bs[-1])
 
         euler_label = 'Euler error = ' + "{:.3E}".format(euler_diff)
-        rk4_label = '4th Order Runge-Kutta error = ' + "{:.3E}".format(rk4_diff)
+        rk4_label = '4th Order Runge-Kutta error = '
+                    + "{:.3E}".format(rk4_diff)
         bs_label = 'Burlisch-Stoer error = ' + "{:.3E}".format(bs_diff)
 
         plt.figure(figsize=(10, 5))
@@ -143,7 +151,7 @@ if __name__ == '__main__':
     '''
     x = 0.0
     y = 0.0
-    dx = 1.0/(2.0**28.0)
+    dx = 1.0 / (2.0**28.0)
     true_y = 0.773877305
     while x < 1.0:
         print(x)
